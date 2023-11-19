@@ -20,10 +20,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     ) :: dbStep ::
       WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList) ++
       githubWorkflowGeneratedCacheSteps.value ++
-      List(
-        WorkflowStep.Sbt(List("docs/mdoc"), name = Some("Compile the documentation scala code")),
-        WorkflowStep.Sbt(List("readme/mdoc"), name = Some("Compile the readme scala code"))
-      )
+      List(WorkflowStep.Sbt(List("mdoc"), name = Some("Compile the scala code for the blog")))
   ),
   WorkflowJob(
     id = "docs",
@@ -73,4 +70,4 @@ lazy val docs = project
     mdocOut := file("../site"),
     tlFatalWarnings := false
   )
-  .enablePlugins(MdocPlugin, DocusaurusPlugin, NoPublishPlugin)
+  .enablePlugins(MdocPlugin, NoPublishPlugin)

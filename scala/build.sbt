@@ -29,7 +29,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     id = "docs",
     name = "Run mdoc docs",
     needs = List("compile-docs"),
-    scalas = List(scala213Version),
+    scalas = List("3.3.1"),
     steps = WorkflowStep.Use(
       UseRef.Public("actions", "checkout", "v3"),
       name = Some("Checkout current branch (fast)"),

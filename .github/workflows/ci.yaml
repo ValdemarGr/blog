@@ -23,6 +23,15 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v2
       - run: nix flake check
       - run: cd scala && sbt docs
+      - run: cd website && yarn install
+
+      - env:
+          GIT_USER: valdemargr
+          GIT_PASS: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name ValdemarGr
+          git config --global user.email randomvald0069@gmail.com
+          cd website && yarn deploy
   build:
     name: Build and Test
     strategy:

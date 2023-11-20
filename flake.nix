@@ -1,5 +1,5 @@
 {
-  description = "Shell for dev";
+  description = "Blog";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
@@ -13,13 +13,14 @@
   in
   {
     devShells.${system}.default = pkgs.mkShell {
-      name = "catcheffect-dev";
+      name = "blog";
       nativeBuildInputs = [ 
         pkgs.jdk11
         pkgs.scalafmt
         pkgs.zsh
         pkgs.sbt
         pkgs.graalvm-ce
+        pkgs.yarn
       ];
     };
   };

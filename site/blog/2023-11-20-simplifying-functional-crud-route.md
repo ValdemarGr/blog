@@ -17,7 +17,7 @@ To exemplify what issues may arrise when dealing with such problems, we will cre
 If the motivation for this article is of interest, then compare the initial solution to the final solution.
 
 ## Domain
-To exemplify the problem consider performing these operations for service managing users.
+To exemplify the problem, we will go though adding a feature for creating users.
 We will use some simple domain types to represent our problem.
 ```scala
 final case class InputUser(
@@ -47,7 +47,7 @@ final case class User(
 final case class CreateUser(name: String, phone: Phone)
 trait UserApi {
   // returns the ids of the created users
-  def createUsers(token: String, inputs: NonEmptyList[CreateUser]): IO[NonEmptyList[CreateUser]]
+  def createUsers(token: String, inputs: NonEmptyList[CreateUser]): IO[NonEmptyList[Int]]
 }
 
 trait Repo {

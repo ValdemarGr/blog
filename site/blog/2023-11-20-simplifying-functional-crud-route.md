@@ -467,18 +467,17 @@ The lines-of-code reduction was not negligible, but we had to add extra abstract
 The final solution requires more knowledge of the generic abstractions, and reduces the required problem-specific knowledge for readers of the code.
 However the initial solution is easier for someone who is not familiar with the abstractions to understand.
 
-I believe that if an abstraction is almost at the level of universal property and has practical applications then it is worth learning.
+If an abstraction has a foundational nature, is principled and practical, then I believe it is worth the effort to learn.
 
-The relationship between `Monad` and `Applicative` have practical applications.
-Our interest in these algebras is of foundational nature, the interest in dependent and independent things.
+Our interest in the relationship between `Monad` and `Applicative` is of foundational nature, the interest in dependent and independent things.
 `Parallel` shows us that a structure can be given multiple semantics, some of which form a `Monad` and some of which form an `Applicative`.
 We have also seen that `Parallel` can give a structure more than just two semantical interpretations.
 
-`Hxl` is a principled solution to batching, however it is more of an engineering solution than a mathematical truth.
-However, `Hxl` almost cut the problem size in half and is generally applicable.
+`Hxl` is a principled solution to batching, however it is more of an engineering solution than a mathematical construction.
+However, `Hxl` almost cuts the problem size in half and is generally applicable.
 
 `catch-effect` introduces algebras (MTL) that are very well established in functional programming.
 `catch-effect` is born from modern effect research of algebraic effects and capabilities.
-However, `catch-effect` is the only abstraction that cannot be graced with soundness, as no capability based system is in Scala (yet).
+However, `catch-effect` is the only abstraction that we have explored which cannot be graced with soundness, as no there is no capture checking system in Scala (yet).
 
-Thank you for reading, I hope that at-least some of the ideas and abstractions presented in this article were of use to you dear reader.
+Thank you for reading, I hope that at least some of the ideas and abstractions presented in this article were of interest.

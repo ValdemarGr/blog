@@ -479,7 +479,7 @@ Our interest in the relationship between `Monad` and `Applicative` is of foundat
 We have also seen that `Parallel` can give a structure more than just two semantical interpretations, notably when embedding a structure that forms a `Parallel` inside of another structure that also forms a `Parallel` (`EitherT` and `Hxl`).
 
 `Hxl` is a principled solution to batching, however it is more of an engineering solution than a mathematical construction.
-However, `Hxl` almost cuts the problem size in half and is generally applicable.
+Regardless, `Hxl` almost cuts the problem size in half and is generally applicable.
 
 `catch-effect` introduces algebras (MTL) that are well established in functional programming.
 `catch-effect` is born from modern effect research of algebraic effects and capabilities.

@@ -347,7 +347,8 @@ def insertUser(
           Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).mapK(liftK).monadic
         else HxlM.unit[G]
       id <- HxlM.liftF(liftK(UUIDGen.randomUUID[IO]))
-      _ <- insertUser(User(id, input.name, input.age, phone, None, organizationId), repo).mapK(liftK).monadic
+      u = User(id, input.name, input.age, phone, None, organizationId)
+      _ <- insertUser(u, repo).mapK(liftK).monadic
     } yield id
 
   for {
@@ -397,7 +398,8 @@ def insertUser(
           Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).monadic
         else HxlM.unit[IO]
       id <- HxlM.liftF(UUIDGen.randomUUID[IO])
-      _ <- insertUser(User(id, input.name, input.age, phone, None, organizationId), repo).monadic
+      u = User(id, input.name, input.age, phone, None, organizationId)
+      _ <- insertUser(u, repo).monadic
     } yield id
 
   for {
@@ -435,7 +437,8 @@ def insertUser(
           Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).monadic
         else HxlM.unit[IO]
       id <- HxlM.liftF(UUIDGen.randomUUID[IO])
-      _ <- insertUser(User(id, input.name, input.age, phone, None, organizationId), repo).monadic
+      u = User(id, input.name, input.age, phone, None, organizationId)
+      _ <- insertUser(u, repo).monadic
     } yield id
 
   for {

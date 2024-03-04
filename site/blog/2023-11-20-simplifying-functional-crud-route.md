@@ -60,7 +60,7 @@ trait Repo {
 ```
 
 ## The initial implementation
-We'll start off with a very crude and complex implementation to set the stage.
+We'll start off with a crude and complex implementation to set the stage.
 ```scala
 sealed trait Error
 final case class PhoneParseError(message: String) extends Throwable with Error {
@@ -112,12 +112,12 @@ def insertUser(
   run.map(Right(_)).recover{ case e: Error => Left(e) }
 }
 ```
-The initial implementation has some glaring issues:
-1. We pay a steep price in terms of complexity for batching api operations.
-2. Errors are not accumulated, the first error that occurs "wins".
-3. If more steps are added then the tuple of information we pass around will grow.
-4. Any intermediate exception handlers may eat our error since it is a exception.
-5. Partitioning the inputs into two groups is not a pleasant experience and scales poorly with more groups.
+The initial implementation has some issues, some of which are syntatic and others semantic.
+1. (syntax) We pay a steep price in terms of complexity for batching api operations.
+2. (semantics) Errors are not accumulated, the first error that occurs "wins".
+3. (syntax) If more steps are added then the tuple of data we pass around will grow.
+4. (semantics) Any intermediate exception handlers may eat our error since it is a exception.
+5. (syntax) Partitioning the inputs into two groups is not a pleasant experience and scales poorly with more groups.
 
 ### Functional error handling
 The classic answer to error handling when effects are involved in functional programming is monad transformers.
@@ -274,8 +274,8 @@ Solving problems algebraically as opposed to heuristically, is something functio
 [Haxl](https://dl.acm.org/doi/10.1145/2628136.2628144) is an optimistic algebraic solution for batching that works out most applications.
 
 Haxl is a library for Haskell, but implementations for Scala also exist.
-* [Fetch](https://github.com/xebia-functional/fetch) is a library that is very close to Haxl and has a plentyful collection of utilities.
-* [Hxl](https://github.com/casehubdk/hxl) is a very small (pure) library that focuses on the core of Haxl and extensibility whilst being algebraically correct.
+* [Fetch](https://github.com/xebia-functional/fetch) is a library that is close to Haxl and has a plentyful collection of utilities.
+* [Hxl](https://github.com/casehubdk/hxl) is a small (pure) library that focuses on the core of Haxl and extensibility whilst being algebraically correct.
 * [ZQuery](https://github.com/zio/zio-query) is a library that that also provides a Haxl-like experience, being it is built on top of `ZIO`, it is not as typeclass focused but instead leans heavily into `ZIO`.
 Since this article is about simplifying and using sound algebraic principles, we will be using `Hxl`.
 
@@ -478,7 +478,7 @@ We have also seen that `Parallel` can give a structure more than just two semant
 `Hxl` is a principled solution to batching, however it is more of an engineering solution than a mathematical construction.
 However, `Hxl` almost cuts the problem size in half and is generally applicable.
 
-`catch-effect` introduces algebras (MTL) that are very well established in functional programming.
+`catch-effect` introduces algebras (MTL) that are well established in functional programming.
 `catch-effect` is born from modern effect research of algebraic effects and capabilities.
 However, `catch-effect` is the only abstraction that we have explored which cannot be graced with soundness, as no there is no capture checking system in Scala (yet).
 

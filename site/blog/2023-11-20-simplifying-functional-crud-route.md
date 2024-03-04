@@ -467,7 +467,7 @@ The lines-of-code reduction was not negligible, but we had to add extra abstract
 The final solution requires more knowledge of the generic abstractions, and reduces the required problem-specific knowledge for readers of the code.
 However the initial solution is easier for someone who is not familiar with the abstractions to understand.
 
-I believe that if an abstraction is almost at the level of "universal algebraic property", then it is worth learning and using.
+I believe that if an abstraction is almost at the level of universal property and has practical applications then it is worth learning.
 
 The distinction between `Monad` and `Applicative` are universal structures that differ in regard sequential versus independent operations.
 `Parallel` shows us that a structure can be given multiple semantics, some of which form a `Monad` and some of which form an `Applicative`.

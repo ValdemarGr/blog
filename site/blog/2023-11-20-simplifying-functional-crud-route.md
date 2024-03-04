@@ -476,7 +476,7 @@ If an abstraction has a foundational nature, is principled and practical, then I
 
 Our interest in the relationship between `Monad` and `Applicative` is of foundational nature, the interest in dependent and independent things.
 `Parallel` shows us that a structure can be given multiple semantics, some of which form a `Monad` and some of which form an `Applicative`.
-We have also seen that `Parallel` can give a structure more than just two semantical interpretations, notably embedding a parallel structure inside of another parallel structure (`EitherT`).
+We have also seen that `Parallel` can give a structure more than just two semantical interpretations, notably when embedding a structure that forms a `Parallel` inside of another structure that also forms a `Parallel` (`EitherT` and `Hxl`).
 
 `Hxl` is a principled solution to batching, however it is more of an engineering solution than a mathematical construction.
 However, `Hxl` almost cuts the problem size in half and is generally applicable.

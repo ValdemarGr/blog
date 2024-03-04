@@ -118,7 +118,7 @@ The initial implementation has some glaring issues:
 5. Partitioning the inputs into two groups is not a pleasant experience and scales poorly with more groups.
 
 ### Functional error handling
-The classic answer to error handling when effects are involved in functional programmis is monad transformers.
+The classic answer to error handling when effects are involved in functional programming is monad transformers.
 Although this won't be our final destination, adding a monad transformer as an intermediate stepping stone in our refactoring will help us understand the problem better.
 ```scala
 def insertUser(
@@ -175,8 +175,8 @@ Before handling `EitherT`, let's take a look at another issue.
 Monads are inherently sequential, and as such, they are not well suited for accumulating errors.
 Instead, we are looking for an algebraic structure that allows independent operations to be combined.
 To solve this riddle, we'll invite `Applicative` to the war table.
-`Either` an accumulating cousin called `Validated`, that forms an `Applicative` if the error forms a `Semigroup`.
-`cats` gives some useful type aliases for `Validated` automatically have an `Applicative`.
+`Either` has an accumulating cousin called `Validated` that forms an `Applicative` if the error `E` forms a `Semigroup`.
+`cats` gives some useful type aliases for `Validated`.
 Notably, `ValidatedNec` that has the following definition:
 ```scala
 type ValidatedNec[E, A] = Validated[NonEmptyChain[E], A]
@@ -204,6 +204,7 @@ Instead, bear with me, we can intorduce another typeclass that will help us out.
 
 Now for the application of all this theory.
 Our `EitherT` also has a `Parallel` instance that allows us to accumulate errors.
+We'll use `parTraverse` instead of `traverse` when parsing the phone numbers.
 ```scala
 type Errors = NonEmptyChain[Error]
 def insertUser(
@@ -263,17 +264,17 @@ A `Parallel` inastance for `EitherT` is not a free lunch, it comes with ambiguit
 Multiple valid `Parallel` instances for `EitherT` exist, but that is another topic.
 
 ### Handling batching
-We pay a hefty price for batching, since we have to manually partition our batch size and handle the case where there are no elements in the batch.
+We pay a hefty price for batching, since we have to manually partition our batches and handle the case where there are no elements in the batch.
 
 Say we would like to solve our batching issue once and for all.
 By exploring commonplace batching libraries, one would quickly find that most use global state and timers.
 Solving problems algebraically as opposed to heuristically, is something functional programmers should be good at.
-(Haxl)[https://dl.acm.org/doi/10.1145/2628136.2628144] is an optimistic algebraic solution for batching that works out most applications.
+[Haxl](https://dl.acm.org/doi/10.1145/2628136.2628144) is an optimistic algebraic solution for batching that works out most applications.
 
 Haxl is a library for Haskell, but implementations for Scala also exist.
-* (Fetch)[https://github.com/xebia-functional/fetch] is a library that is very close to Haxl and has a plentyful collection of utilities.
-* (Hxl)[https://github.com/casehubdk/hxl] is a very small (pure) library that focuses on the core of Haxl and extensibility whilst being more algebraically correct.
-* (ZQuery)[https://github.com/zio/zio-query] is a library that that also provides a Haxl-like experience, being it is built on top of `ZIO`, it is not as typeclass focused but instead leans heavily into `ZIO`.
+* [Fetch](https://github.com/xebia-functional/fetch) is a library that is very close to Haxl and has a plentyful collection of utilities.
+* [Hxl](https://github.com/casehubdk/hxl) is a very small (pure) library that focuses on the core of Haxl and extensibility whilst being algebraically correct.
+* [ZQuery](https://github.com/zio/zio-query) is a library that that also provides a Haxl-like experience, being it is built on top of `ZIO`, it is not as typeclass focused but instead leans heavily into `ZIO`.
 Since this article is about simplifying and using sound algebraic principles, we will be using `Hxl`.
 
 To allow batching we must lift our batched api's into `Hxl`.
@@ -307,15 +308,17 @@ def createUser(input: CreateUser, token: String, api: UserApi): Hxl[IO, Int] =
   Hxl.force(CreateUsersKey(input), createUserDataSource(token, api))
 ```
 
-`Hxl` is only `Applicative`, but we need `flatMap` to express our program.
+`Hxl` forms only an `Applicative`, but we need `flatMap` to express our program.
 `Hxl` provides `andThen` (like `Validated`) and a `Monad`ic view `HxlM`, like `Either` is to `Validated`.
 
 Before the next iteration, note that we only need to load the token if we have at least one user that needs to be created in the api.
 We can use `Hxl` to load the token exactly once.
-But not all tasks need to be solved by the same tool, and as such we can also look towards memoization to solve this task.
+But not all tasks need to be solved with the same tool, if a simpler one is available.
+We can look towards memoization to lazily load the token.
 
-Hxl, by default, does only have an `Applicative` instance.
-However, we can import a `Parallel` instance for `Hxl` which will let us combine the resulting `Hxl`s in parallel if our effect type (`IO`) also forms `Parallel`.
+Hxl, by default, does only provide an `Applicative` instance.
+However, we can import a `Parallel` instance for `Hxl` which will let us combine the resulting `Hxl`s in parallel if our effect type also forms a `Parallel`.
+
 :::info
 `Hxl`s `Parallel` instance has a `Monad` inside of it, so it can be unsafe to use if you pull the `Monad` out.
 Therefore it is behind an import.
@@ -365,8 +368,8 @@ We solved issue 1 and 5 with `Hxl`.
 A lot of the code's remaining complexity is due to our use of `EitherT`.
 Pulling in a tool to algebraically solve a problem will yet again be our salvation.
 
-A capability based utility named (catch-effect)[https://github.com/ValdemarGr/catch-effect] that I have authored will aid us in this task.
-A quick summary of `catch-effect` is that it allows us to write as if using MTL, but without the need for monad transformers.
+A capability based utility named [catch-effect](https://github.com/ValdemarGr/catch-effect) that I have authored will aid us in this task.
+`catch-effect` allows us to write as if using MTL, but without the need for monad transformers.
 `catch-effect` provides a structure `Catch` that can open local scopes where errors can be raised and caught:
 ```scala
 def example(c: Catch[IO]): IO[Either[Error, String]] =
@@ -409,7 +412,7 @@ Now let's restore our wish for accumulating errors.
 
 When we worked with `EitherT`, we had to pick a `Parallel` instance for `EitherT` that would accumulate errors.
 The default `Parallel` instance for `IO` will for any two effects, run their effects as two parallel (green) threads.
-`IO` cannot, however, reason with errors from `catch-effect`.
+`IO`, however, connet reason with errors from `catch-effect`.
 Fortunately `catch-effect` can form a `Parallel` accumulating instance for `IO` (given thate `E` forms a `Semigroup`), just like `EitherT`!.
 When we slam all of our `Hxl`s together, we will do so in parallel, using the enchanced `Parallel` instance from `catch-effect`.
 ```scala
@@ -419,13 +422,13 @@ def insertUser(
   api: UserApi,
   repo: Repo,
   c: Catch[IO]
-): IO[Either[Error, NonEmptyList[UUID]]] = c.use[Error] { h =>
+): IO[Either[Errors, NonEmptyList[UUID]]] = c.use[Errors] { h =>
   implicit val parallelIO: Parallel[IO] = c.accumulatingParallel
   
   def run(input: InputUser, getToken: IO[String]): Hxl[IO, UUID] = 
     for {
       phone <- HxlM.liftF {
-        h.fromEither(parsePhone(iu.phone).leftMap(x => PhoneParseError(x)))
+        h.fromEither(parsePhone(iu.phone).leftMap(x => NonEmptyChain.one(PhoneParseError(x))))
       }
       _ <- 
         if (input.shouldBeCreatedInApi)
@@ -436,7 +439,8 @@ def insertUser(
     } yield id
 
   for {
-    _ <- h.fromOptionF(OrganizationNotFound())(repo.getOrganization(organizationId))
+    _ <- 
+      h.fromOptionF(NonEmptyChain.one(OrganizationNotFound()))(repo.getOrganization(organizationId))
     getToken <- repo.getOrganizationAccessToken(organizationId).memoize
     res <- Hxl.runSequential(inputs.parTraverse(iu => run(iu, getToken)).hxl)
   } yield res

@@ -3,7 +3,6 @@ slug: simplify-fp-crud
 title: Simplifying a functional crud route
 ---
 
-## Motivation
 Most larger applications eventually solve three problems:
 1. Raising errors that need to be handled.
 2. Handling lists of data as opposed to single entities.
@@ -14,6 +13,10 @@ To exemplify what issues may arrise when dealing with such problems, we will cre
 2. Read relevant data from a database, raising an error if the data is not found.
 3. Construct the resulting entity, by calling a remote api.
 4. Insert the data to the database.
+
+## Motivation
+When using by-the-book functional programming tools to perform the tasks at hand the code quickly grows unwieldy.
+By applying more exotic functional abstractions, we can simplify the code and make it more extensible.
 
 ## Domain
 To exemplify the problem, we will go though adding a feature for creating users.

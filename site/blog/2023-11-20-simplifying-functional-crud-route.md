@@ -424,7 +424,7 @@ Now let's restore our wish for accumulating errors.
 When we worked with `EitherT`, we had to pick a `Parallel` instance for `EitherT` that would accumulate errors.
 The default `Parallel` instance for `IO` will for any two effects, run their effects as two parallel (green) threads.
 `IO`, however, cannot reason with errors from `catch-effect`.
-Fortunately `catch-effect` can construct a `Parallel` accumulating instance for `IO` (given thate `E` forms a `Semigroup`), just like `EitherT`!.
+Fortunately `catch-effect` can construct a `Parallel` accumulating instance for `IO` (given that `E` forms a `Semigroup`), just like `EitherT`!.
 When we slam all of our `Hxl`s together, we will do so in parallel, using the enchanced `Parallel` instance from `catch-effect`.
 ```scala
 def insertUser(

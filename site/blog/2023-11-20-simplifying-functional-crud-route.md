@@ -439,8 +439,9 @@ def insertUser(
     } yield id
 
   for {
-    _ <- 
-      h.fromOptionF(NonEmptyChain.one(OrganizationNotFound()))(repo.getOrganization(organizationId))
+    _ <- h.fromOptionF(NonEmptyChain.one(OrganizationNotFound())) { 
+      repo.getOrganization(organizationId)
+    }
     getToken <- repo.getOrganizationAccessToken(organizationId).memoize
     res <- Hxl.runSequential(inputs.parTraverse(iu => run(iu, getToken)).hxl)
   } yield res

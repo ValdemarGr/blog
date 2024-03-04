@@ -344,7 +344,9 @@ def insertUser(
       }
       apiId <- 
         if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).mapK(liftK).monadic.map(Some(_))
+          Hxl.liftF(getToken)
+            .flatMap(token => createUser(input, token, api)).mapK(liftK)
+            .monadic.map(Some(_))
         else HxlM.pure[G, Option[Int]](None)
       id <- HxlM.liftF(liftK(UUIDGen.randomUUID[IO]))
       u = User(id, input.name, input.age, phone, apiId, organizationId)
@@ -395,7 +397,9 @@ def insertUser(
       }
       apiId <- 
         if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).monadic.map(Some(_))
+          Hxl.liftF(getToken)
+            .flatMap(token => createUser(input, token, api))
+            .monadic.map(Some(_))
         else HxlM.pure[IO, Option[Int]](None)
       id <- HxlM.liftF(UUIDGen.randomUUID[IO])
       u = User(id, input.name, input.age, phone, apiId, organizationId)
@@ -434,7 +438,9 @@ def insertUser(
       }
       apiId <- 
         if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).monadic.map(Some(_))
+          Hxl.liftF(getToken)
+            .flatMap(token => createUser(input, token, api))
+            .monadic.map(Some(_))
         else HxlM.pure[IO, Option[Int]](None)
       id <- HxlM.liftF(UUIDGen.randomUUID[IO])
       u = User(id, input.name, input.age, phone, apiId, organizationId)

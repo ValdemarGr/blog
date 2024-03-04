@@ -111,7 +111,7 @@ def insertUser(
 }
 ```
 The initial implementation has some glaring issues:
-1. We pay a steep price in terms of complexity for batching operations for the api.
+1. We pay a steep price in terms of complexity for batching api operations.
 2. Errors are not accumulated, the first error that occurs "wins".
 3. If more steps are added then the tuple of information we pass around will grow.
 4. Any intermediate exception handlers may eat our error since it is a exception.

@@ -265,6 +265,9 @@ There is a lot of considerations behind our parallel instance.
 A `Parallel` inastance for `EitherT` is not a free lunch, it comes with ambiguity.
 Multiple valid `Parallel` instances for `EitherT` exist, but that is another topic.
 
+With this addition we have solved all issues regarding semantics.
+Now we can take try to make the solution syntactically more pleasing.
+
 ### Handling batching
 We pay a hefty price for batching, since we have to manually partition our batches and handle the case where there are no elements in the batch.
 

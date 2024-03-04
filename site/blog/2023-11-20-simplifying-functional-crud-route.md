@@ -3,6 +3,7 @@ slug: simplify-fp-crud
 title: Simplifying a functional crud route
 ---
 
+## Motivation
 Most larger applications eventually solve three problems:
 1. Raising errors that need to be handled.
 2. Handling lists of data as opposed to single entities.

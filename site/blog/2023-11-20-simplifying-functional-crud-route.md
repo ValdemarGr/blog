@@ -14,7 +14,7 @@ To exemplify what issues may arrise when dealing with such problems, we will cre
 3. Construct the resulting entity, by calling a remote api.
 4. Insert the data to the database.
 
-If the motivation for this article is of interest, then compare the initial solution to the final solution.
+If the motivation for this article is of interest, then compare the code [here](#accumulating-errorsinitial) to the final solution.
 
 ## Domain
 To exemplify the problem, we will go though adding a feature for creating users.

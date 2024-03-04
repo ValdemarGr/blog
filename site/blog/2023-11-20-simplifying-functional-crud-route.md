@@ -342,12 +342,12 @@ def insertUser(
       phone <- HxlM.liftF {
         G.fromEither(parsePhone(iu.phone).leftMap(x => NonEmptyChain.one(PhoneParseError(x))))
       }
-      _ <- 
+      apiId <- 
         if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).mapK(liftK).monadic
-        else HxlM.unit[G]
+          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).mapK(liftK).monadic.map(Some(_))
+        else HxlM.pure[G, Option[Int]](None)
       id <- HxlM.liftF(liftK(UUIDGen.randomUUID[IO]))
-      u = User(id, input.name, input.age, phone, None, organizationId)
+      u = User(id, input.name, input.age, phone, apiId, organizationId)
       _ <- insertUser(u, repo).mapK(liftK).monadic
     } yield id
 
@@ -393,12 +393,12 @@ def insertUser(
       phone <- HxlM.liftF {
         h.fromEither(parsePhone(iu.phone).leftMap(x => PhoneParseError(x)))
       }
-      _ <- 
+      apiId <- 
         if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).monadic
-        else HxlM.unit[IO]
+          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).monadic.map(Some(_))
+        else HxlM.pure[IO, Option[Int]](None)
       id <- HxlM.liftF(UUIDGen.randomUUID[IO])
-      u = User(id, input.name, input.age, phone, None, organizationId)
+      u = User(id, input.name, input.age, phone, apiId, organizationId)
       _ <- insertUser(u, repo).monadic
     } yield id
 
@@ -432,12 +432,12 @@ def insertUser(
       phone <- HxlM.liftF {
         h.fromEither(parsePhone(iu.phone).leftMap(x => NonEmptyChain.one(PhoneParseError(x))))
       }
-      _ <- 
+      apiId <- 
         if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).monadic
-        else HxlM.unit[IO]
+          Hxl.liftF(getToken).flatMap(token => createUser(input, token, api)).monadic.map(Some(_))
+        else HxlM.pure[IO, Option[Int]](None)
       id <- HxlM.liftF(UUIDGen.randomUUID[IO])
-      u = User(id, input.name, input.age, phone, None, organizationId)
+      u = User(id, input.name, input.age, phone, apiId, organizationId)
       _ <- insertUser(u, repo).monadic
     } yield id
 

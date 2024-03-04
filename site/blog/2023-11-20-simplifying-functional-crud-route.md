@@ -469,7 +469,8 @@ However the initial solution is easier for someone who is not familiar with the 
 
 I believe that if an abstraction is almost at the level of universal property and has practical applications then it is worth learning.
 
-The distinction between `Monad` and `Applicative` are universal structures that differ in regard sequential versus independent operations.
+The relationship between `Monad` and `Applicative` have practical applications.
+Our interest in these algebras is of foundational nature, the interest in dependent and independent things.
 `Parallel` shows us that a structure can be given multiple semantics, some of which form a `Monad` and some of which form an `Applicative`.
 We have also seen that `Parallel` can give a structure more than just two semantical interpretations.
 

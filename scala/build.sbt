@@ -1,18 +1,19 @@
-ThisBuild / scalaVersion := "3.3.1"
+ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / organization := "io.github.valdemargr"
 
 ThisBuild / licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / developers := List(
   Developer("valdemargr", "Valdemar Grange", "randomvald0069@gmail.com", url("https://github.com/valdemargr"))
 )
-ThisBuild / headerLicense := Some(HeaderLicense.Custom("Copyright (c) 2023 Valdemar Grange"))
-ThisBuild / headerEmptyLine := false
-
-lazy val docs = project
+lazy val blog = project
   .in(file("."))
   .settings(
-    moduleName := "site",
-    mdocOut := file("../blog"),
-    tlFatalWarnings := false
+    name := "blog",
+    mdocOut := file("../site/blog"),
+    mdocIn := file("blog"),
+    libraryDependencies ++= Seq(
+      "io.github.valdemargr" %% "catch-effect" % "0.1.1",
+      "io.github.casehubdk" %% "hxl" % "0.2.3",
+    )
   )
-  .enablePlugins(MdocPlugin, NoPublishPlugin)
+  .enablePlugins(MdocPlugin)

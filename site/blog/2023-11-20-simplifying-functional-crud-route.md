@@ -473,7 +473,7 @@ We went though a lot of stuff, but we ended up with a much shorter solution.
 The data sources we created can also be reused in other parts of our application.
 
 #### Conclusion
-The lines-of-code reduction was not negligible, but we had to add extra abstractions to get there.
+The line-of-code reduction between the first semantically correct solution and the final one was not negligible, but we had to add extra abstractions to get there.
 
 The final solution requires more knowledge of the generic abstractions, and reduces the required problem-specific knowledge for readers of the code.
 However the initial solution is easier for someone who is not familiar with the abstractions to understand.

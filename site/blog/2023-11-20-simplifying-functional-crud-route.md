@@ -19,7 +19,7 @@ When using by-the-book functional programming tools to perform the tasks at hand
 By applying more exotic functional abstractions, we can simplify the code and make it more extensible.
 
 ## Domain
-Consider the following code to illustrate the issue at hand.
+Consider the following prelude to illustrate the issue at hand.
 ```scala
 final case class InputUser(
   name: String,
@@ -57,6 +57,7 @@ trait Repo {
   def getOrganizationAccessToken(id: String): IO[String]
 }
 ```
+With the domain in place, we can start to explore how we can satisfy the requirements for our API.
 
 ## The initial implementation
 We'll start off with a crude and complex implementation to set the stage.

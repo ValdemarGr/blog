@@ -285,6 +285,7 @@ Haxl is a library for Haskell, but implementations for Scala also exist.
 * [Fetch](https://github.com/xebia-functional/fetch) is a library that is close to Haxl and has a plentyful collection of utilities.
 * [Hxl](https://github.com/casehubdk/hxl) is a small (pure) library that focuses on the core of Haxl and extensibility whilst being algebraically correct.
 * [ZQuery](https://github.com/zio/zio-query) is a library that that also provides a Haxl-like experience, being it is built on top of `ZIO`, it is not as typeclass focused but instead leans heavily into `ZIO`.
+
 Since this article is about simplifying and using well considered algebraic principles, we will be using `Hxl`.
 
 :::info

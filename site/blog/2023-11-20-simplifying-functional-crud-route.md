@@ -489,4 +489,4 @@ Regardless, `Hxl` almost cuts the problem size in half and is generally applicab
 `catch-effect` is a pragmatic solution born from modern effect research of algebraic effects and capabilities.
 However, `catch-effect` is the only abstraction that we have explored which cannot be graced with a sound api (capture checking).
 
-Thank you for reading, I hope that at least some of the ideas and abstractions presented in this article were of interest.
+Thank you for reading, I hope that at least some of the ideas and abstractions presented in this post were of interest.

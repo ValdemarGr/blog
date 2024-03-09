@@ -119,6 +119,7 @@ The initial implementation has some issues, some of which are syntatic and other
 4. (semantics) Any intermediate exception handlers may eat our error since it is a exception.
 5. (syntax) Partitioning the inputs into two groups is not a pleasant experience and scales poorly with more groups.
 
+We will first address the correctness of our solution, and then we will address the syntactic issues.
 ### Functional error handling
 The classic answer to error handling when effects are involved in functional programming are monad transformers.
 Although this won't be our final destination, adding a monad transformer as an intermediate stepping stone in our refactoring will help us understand the problem better.

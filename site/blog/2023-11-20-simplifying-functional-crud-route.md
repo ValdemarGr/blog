@@ -8,11 +8,11 @@ Most larger applications eventually solve three problems:
 2. Handling lists of data as opposed to single entities.
 3. Optionally calling apis, depending on input.
 
-To exemplify what issues may arrise when dealing with such problems, we will create an entity by performing some operations for each input:
-1. Parse the input ([as opposed to validating](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)).
-2. Read relevant data from a database, raising an error if the data is not found.
-3. Construct the resulting entity, by calling a remote api.
-4. Insert the data to the database.
+To exemplify what issues may arrise when dealing with such problems, we will create an list of entities by performing some operations for each entity:
+1. Parse the input's phone number ([as opposed to validating](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/)).
+2. Reading the relevant organization for the request from the database, raising an error if the organization is not found.
+3. Construct the resulting entities, by fetching an access token from the database and calling a remote api to create them in the external system.
+4. Insert the resulting entities into the database.
 
 ## Motivation
 When using by-the-book functional programming tools to perform the tasks at hand the code quickly grows unwieldy.

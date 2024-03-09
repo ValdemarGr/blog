@@ -120,7 +120,7 @@ The initial implementation has some issues, some of which are syntatic and other
 5. (syntax) Partitioning the inputs into two groups is not a pleasant experience and scales poorly with more groups.
 
 ### Functional error handling
-The classic answer to error handling when effects are involved in functional programming is monad transformers.
+The classic answer to error handling when effects are involved in functional programming are monad transformers.
 Although this won't be our final destination, adding a monad transformer as an intermediate stepping stone in our refactoring will help us understand the problem better.
 ```scala
 def insertUser(
@@ -178,8 +178,7 @@ Monads are inherently sequential, and as such, they are not well suited for accu
 Instead, we are looking for an algebraic structure that allows independent operations to be combined.
 To solve this riddle, we'll invite `Applicative` to the war table.
 `Either` has an accumulating cousin called `Validated` that forms an `Applicative` if the error `E` forms a `Semigroup`.
-`cats` gives some useful type aliases for `Validated`.
-Notably, `ValidatedNec` that has the following definition:
+`cats` gives some useful type aliases for `Validated`, notably `ValidatedNec` which has the following definition:
 ```scala
 type ValidatedNec[E, A] = Validated[NonEmptyChain[E], A]
 ```
@@ -187,7 +186,7 @@ Since `NonEmptyChain` forms a `Semigroup` (it has a lawful combine function), th
 
 Writing out the code (or reading it for that matter) with `Validated` is not going to be a pleasant experience.
 It will involve a bunch of values of type `IO[ValidatedNec[Error, A]]` which all require a bunch of `sequence`ing to wire together.
-Instead, bear with me, we can intorduce another typeclass that will help us out.
+Instead, bear with me, we can introduce another typeclass that will help us out.
 
 `cats` distills the relationship for structures that have `Applicative` or `Monad` semantics into a typeclass `Parallel`.
 
@@ -198,15 +197,21 @@ Instead, bear with me, we can intorduce another typeclass that will help us out.
 * `Monad[F]`
 
 `Parallel` does not neccessarily mean parallel execution, but rather the ability to switch to a different context for intermediate operations.
-`Parallel` defines the realtionship between `Either` and `Validated` for some type `E` iff `E` forms a `Semigroup`:
+`Parallel` defines the realtionship between `Either` and `Validated` for some type `E` if `E` forms a `Semigroup`:
 * `Either[E, *] ~> Validated[E, *]` by `toValidated`
 * `Validated[E, *] ~> Either[E, *]` by `toEither`
 * `Applicative[Validated[E, *]]` since `E` forms a `Semigroup`
 * `Monad[Either[E, *]]` by construction
 
-Now for the application of all this theory.
+Now for the application of the above discussion.
 Our `EitherT` also has a `Parallel` instance that allows us to accumulate errors.
 We'll use `parTraverse` instead of `traverse` when parsing the phone numbers.
+:::info
+`parTraverse` does the same as `traverse` but uses the `Applicative` inside of `Parallel` to sequence the effects:
+1. given a fuction `A => F[B]`, switch `F` to `G` via `F ~> G` such that `A => G[B]`
+2. use `G`'s `Applicative` to sequence the results such that `G[T[B]]` for some `Traverse[T]`
+3. switches back to `F` via `G ~> F` such that `F[T[B]]`.
+:::
 ```scala
 type Errors = NonEmptyChain[Error]
 def insertUser(
@@ -274,13 +279,24 @@ We pay a hefty price for batching, since we have to manually partition our batch
 Say we would like to solve our batching issue once and for all.
 By exploring commonplace batching libraries, one would quickly find that most use global state and timers.
 Solving problems algebraically as opposed to heuristically, is something functional programmers should be good at.
-[Haxl](https://dl.acm.org/doi/10.1145/2628136.2628144) is an optimistic algebraic solution for batching that works out most applications.
+[Haxl](https://dl.acm.org/doi/10.1145/2628136.2628144) is an optimistic algebraic solution for batching.
 
 Haxl is a library for Haskell, but implementations for Scala also exist.
 * [Fetch](https://github.com/xebia-functional/fetch) is a library that is close to Haxl and has a plentyful collection of utilities.
 * [Hxl](https://github.com/casehubdk/hxl) is a small (pure) library that focuses on the core of Haxl and extensibility whilst being algebraically correct.
 * [ZQuery](https://github.com/zio/zio-query) is a library that that also provides a Haxl-like experience, being it is built on top of `ZIO`, it is not as typeclass focused but instead leans heavily into `ZIO`.
-Since this article is about simplifying and using sound algebraic principles, we will be using `Hxl`.
+Since this article is about simplifying and using well considered algebraic principles, we will be using `Hxl`.
+
+:::info
+Haxl is optimistic since it assumes (hopes) that every instance of a data source fetch is the same number of flatMaps away from the root.
+If the number of flatMaps is indeterministic then Haxl can provide poor batching:
+```scala
+fetchA.flatMap{ _ =>
+  if (randomBoolean()) Hxl.unit.flatMap(_ => fetchB)
+  else fetchB
+}
+```
+:::
 
 To allow batching we must lift our batched api's into `Hxl`.
 As in the Haxl paper, we must define datasources for our api's.
@@ -303,7 +319,7 @@ object CreateUsersKey {
 final case class CreateUsers(token: String) extends DSKey[CreateUsersKey, Int]
 
 def createUserDataSource(token: String, api: UserApi): DataSource[IO, CreateUsersKey, Int] = 
-  DataSource.lift(InsertUser(token)) { (keys: NonEmptyList[CreateUsersKey]) =>
+  DataSource.from(InsertUser(token)) { (keys: NonEmptyList[CreateUsersKey]) =>
     api.createUsers(token, keys.map(_.users)).map{ results =>
       keys.zip(results).toList.toMap: Map[CreateUsersKey, Int]
     }
@@ -313,7 +329,7 @@ def createUser(input: CreateUser, token: String, api: UserApi): Hxl[IO, Int] =
   Hxl.force(CreateUsersKey(input), createUserDataSource(token, api))
 ```
 
-`Hxl` forms only an `Applicative`, but we need `flatMap` to express our program.
+`Hxl` only forms an `Applicative`, but we need `flatMap` to express our program.
 `Hxl` provides `andThen` (like `Validated`) and a `Monad`ic view `HxlM`, like `Either` is to `Validated`.
 
 Before the next iteration, note that we only need to load the token if we have at least one user that needs to be created in the api.
@@ -347,12 +363,8 @@ def insertUser(
       phone <- HxlM.liftF {
         G.fromEither(parsePhone(iu.phone).leftMap(x => NonEmptyChain.one(PhoneParseError(x))))
       }
-      apiId <- 
-        if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken)
-            .flatMap(token => createUser(input, token, api)).mapK(liftK)
-            .monadic.map(Some(_))
-        else HxlM.pure[G, Option[Int]](None)
+      tokOpt <- HxlM.liftF(getToken).map(_.some.filter(_ => input.shouldBeCreatedInApi))
+      apiId <- tokOpt.traverse(createUser(CreateUser(input.name, phone), _, api))
       id <- HxlM.liftF(liftK(UUIDGen.randomUUID[IO]))
       u = User(id, input.name, input.age, phone, apiId, organizationId)
       _ <- insertUser(u, repo).mapK(liftK).monadic
@@ -364,12 +376,12 @@ def insertUser(
       case Some(_) => G.unit
     }
     getToken <- liftK(repo.getOrganizationAccessToken(organizationId).memoize)
-    // notice we run in parallel to use our accumulating parallel instance
+    // notice we run in parallel (parTraverse) to use our accumulating parallel instance
     res <- Hxl.runSequential(inputs.parTraverse(iu => run(iu, getToken)).hxl)
   } yield res
 }
 ```
-Yeah, that's a lot shorter.
+The code is now a lot shorter and we can use closures (flatMap) to express our program.
 We solved issue 1 and 5 with `Hxl`.
 
 ### Erasing `EitherT`
@@ -400,12 +412,8 @@ def insertUser(
       phone <- HxlM.liftF {
         h.fromEither(parsePhone(iu.phone).leftMap(x => PhoneParseError(x)))
       }
-      apiId <- 
-        if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken)
-            .flatMap(token => createUser(input, token, api))
-            .monadic.map(Some(_))
-        else HxlM.pure[IO, Option[Int]](None)
+      tokOpt <- HxlM.liftF(getToken).map(_.some.filter(_ => input.shouldBeCreatedInApi))
+      apiId <- tokOpt.traverse(createUser(CreateUser(input.name, phone), _, api))
       id <- HxlM.liftF(UUIDGen.randomUUID[IO])
       u = User(id, input.name, input.age, phone, apiId, organizationId)
       _ <- insertUser(u, repo).monadic
@@ -422,7 +430,7 @@ def insertUser(
 Now let's restore our wish for accumulating errors.
 
 When we worked with `EitherT`, we had to pick a `Parallel` instance for `EitherT` that would accumulate errors.
-The default `Parallel` instance for `IO` will for any two effects, run their effects as two parallel (green) threads.
+The default `Parallel` instance for `IO` will for any two effects, run their effects as two parallel effects.
 `IO`, however, cannot reason with errors from `catch-effect`.
 Fortunately `catch-effect` can construct a `Parallel` accumulating instance for `IO` (given that `E` forms a `Semigroup`), just like `EitherT`!.
 When we slam all of our `Hxl`s together, we will do so in parallel, using the enchanced `Parallel` instance from `catch-effect`.
@@ -434,19 +442,15 @@ def insertUser(
   repo: Repo,
   c: Catch[IO]
 ): IO[Either[Errors, NonEmptyList[UUID]]] = c.use[Errors] { h =>
-  implicit val parallelIO: Parallel[IO] = c.accumulatingParallel
+  implicit val parallelIO: Parallel[IO] = h.accumulatingParallel
   
   def run(input: InputUser, getToken: IO[String]): Hxl[IO, UUID] = 
     for {
       phone <- HxlM.liftF {
         h.fromEither(parsePhone(iu.phone).leftMap(x => NonEmptyChain.one(PhoneParseError(x))))
       }
-      apiId <- 
-        if (input.shouldBeCreatedInApi)
-          Hxl.liftF(getToken)
-            .flatMap(token => createUser(input, token, api))
-            .monadic.map(Some(_))
-        else HxlM.pure[IO, Option[Int]](None)
+      tokOpt <- HxlM.liftF(getToken).map(_.some.filter(_ => input.shouldBeCreatedInApi))
+      apiId <- tokOpt.traverse(createUser(CreateUser(input.name, phone), _, api))
       id <- HxlM.liftF(UUIDGen.randomUUID[IO])
       u = User(id, input.name, input.age, phone, apiId, organizationId)
       _ <- insertUser(u, repo).monadic
@@ -475,14 +479,13 @@ However the initial solution is easier for someone who is not familiar with the 
 If an abstraction has a foundational nature, is principled and practical, then I believe it is worth the effort to learn.
 
 Our interest in the relationship between `Monad` and `Applicative` is of foundational nature, the interest in dependent and independent things.
-`Parallel` shows us that a structure can be given multiple semantics, some of which form a `Monad` and some of which form an `Applicative`.
-We have also seen that `Parallel` can give a structure more than just two semantical interpretations, notably when embedding a structure that forms a `Parallel` inside of another structure that also forms a `Parallel` (`EitherT` and `Hxl`).
+`Parallel` is an abstraction that lets us reason with structures that can be given multiple semantics, some of which form a `Monad` and some of which form an `Applicative`.
 
 `Hxl` is a principled solution to batching, however it is more of an engineering solution than a mathematical construction.
 Regardless, `Hxl` almost cuts the problem size in half and is generally applicable.
 
 `catch-effect` introduces algebras (MTL) that are well established in functional programming.
-`catch-effect` is born from modern effect research of algebraic effects and capabilities.
-However, `catch-effect` is the only abstraction that we have explored which cannot be graced with soundness, as no there is no capture checking system in Scala (yet).
+`catch-effect` is a pragmatic solution born from modern effect research of algebraic effects and capabilities.
+However, `catch-effect` is the only abstraction that we have explored which cannot be graced with a sound api (capture checking).
 
 Thank you for reading, I hope that at least some of the ideas and abstractions presented in this article were of interest.

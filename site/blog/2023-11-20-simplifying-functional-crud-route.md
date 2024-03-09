@@ -300,8 +300,8 @@ fetchA.flatMap{ _ =>
 ```
 :::
 
-To allow batching we must lift our batched api's into `Hxl`.
-As in the Haxl paper, we must define datasources for our api's.
+To allow batching we must lift our batched api into `Hxl`.
+As in the Haxl paper, we must define datasources for our apis.
 ```scala
 final case class InsertUserKey(user: User)
 case object InsertUser extends DSKey[InsertUserKey, Unit]

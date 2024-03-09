@@ -121,7 +121,7 @@ The initial implementation has some issues, some of which are syntatic and other
 
 We will first address the correctness of our solution, and then we will address the syntactic issues.
 ### Functional error handling
-The classic answer to error handling when effects are involved in functional programming are monad transformers.
+The classic answer to high-level error handling when effects are involved in functional programming are monad transformers.
 Although this won't be our final destination, adding a monad transformer as an intermediate stepping stone in our refactoring will help us understand the problem better.
 ```scala
 def insertUser(
@@ -291,7 +291,7 @@ Since this post is about simplifying and using well considered algebraic princip
 
 :::info
 Haxl is optimistic since it assumes (hopes) that every instance of a data source fetch is the same number of flatMaps away from the root.
-If the number of flatMaps is indeterministic then Haxl can provide poor batching:
+If the number of flatMaps is indeterministic then Haxl may produce poor batches:
 ```scala
 fetchA.flatMap{ _ =>
   if (randomBoolean()) Hxl.unit.flatMap(_ => fetchB)

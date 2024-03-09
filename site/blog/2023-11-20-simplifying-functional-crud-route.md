@@ -19,8 +19,7 @@ When using by-the-book functional programming tools to perform the tasks at hand
 By applying more exotic functional abstractions, we can simplify the code and make it more extensible.
 
 ## Domain
-To exemplify the problem, we will go though adding a feature for creating users.
-We will use some simple domain types to represent our problem.
+Consider the following code to illustrate the issue at hand.
 ```scala
 final case class InputUser(
   name: String,

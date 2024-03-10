@@ -14,6 +14,8 @@ lazy val blog = project
     libraryDependencies ++= Seq(
       "io.github.valdemargr" %% "catch-effect" % "0.1.1",
       "io.github.casehubdk" %% "hxl" % "0.2.3",
-    )
+    ),
+    addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
   )
   .enablePlugins(MdocPlugin)
+

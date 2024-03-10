@@ -131,7 +131,7 @@ The initial implementation has some issues, some of which are syntatic and other
 5. (syntax) Partitioning the inputs into two groups is not a pleasant experience and scales poorly with more groups.
 
 We will first address the correctness of our solution, and then we will address the syntactic issues.
-### Functional error handling
+## Functional error handling
 The classic answer to high-level error handling when effects are involved in functional programming are monad transformers.
 Although this won't be our final destination, adding a monad transformer as an intermediate stepping stone in our refactoring will help us understand the problem better.
 ```scala mdoc:nest
@@ -185,7 +185,7 @@ def insertUsers(
 ```
 With the addition of `EitherT` we have alleviated the 4th concern, but with the unfortunate side effect of making the code more complex.
 Before handling `EitherT`, let's take a look at another issue.
-### Accumulating errors
+## Accumulating errors
 Monads are inherently sequential, and as such, they are not well suited for accumulating errors.
 Instead, we are looking for an algebraic structure that allows independent operations to be combined.
 To solve this riddle, we'll invite `Applicative` to the war table.
@@ -288,7 +288,7 @@ Multiple valid `Parallel` instances for `EitherT` exist, but that is another top
 With this addition we have solved all issues regarding semantics.
 Now we can take try to make the solution syntactically more pleasing.
 
-### Handling batching
+## Handling batching
 We pay a hefty price for batching, since we have to manually partition our batches and handle the case where there are no elements in the batch.
 
 Say we would like to solve our batching issue once and for all.
@@ -353,13 +353,8 @@ We can use `Hxl` to load the token exactly once.
 But not all tasks need to be solved with the same tool, if a simpler one is available.
 We can look towards memoization to lazily load the token.
 
-Hxl, by default, does only provide an `Applicative` instance.
-However, we can import a `Parallel` instance for `Hxl` which will let us combine the resulting `Hxl`s in parallel if our effect type also forms a `Parallel`.
-
-:::info
-`Hxl`s `Parallel` instance has a `Monad` inside of it, so it can be unsafe to use if you pull the `Monad` out.
-Therefore it is behind an import.
-:::
+`Hxl`, by default, does only provide an `Applicative` instance.
+However, we can import a `Parallel` instance for `HxlM` which will let us combine the resulting `Hxl`s in parallel if our effect type also forms a `Parallel`.
 
 Now we can express our batching a tad more elegantly.
 ```scala mdoc:nest
@@ -373,7 +368,7 @@ def insertUsers(
   val G = MonadError[G, Errors]
   val liftK: IO ~> G = EitherT.liftK[IO, Errors]
   implicit val parallelG: Parallel[G] = EitherT.accumulatingParallel[IO, Errors]
-  import hxl.instances.parallel._
+  import hxl.instances.hxlm.parallel._
   def run(input: InputUser, getToken: IO[String]): HxlM[G, UUID] = 
     for {
       phone <- HxlM.liftF {
@@ -393,7 +388,7 @@ def insertUsers(
     }
     getToken <- liftK(repo.getOrganizationAccessToken(organizationId).memoize)
     // notice we run in parallel (parTraverse) to use our accumulating parallel instance
-    res <- Hxl.runSequential(inputs.parTraverse(iu => run(iu, getToken).hxl))
+    res <- Hxl.runSequential(inputs.parTraverse(iu => run(iu, getToken)).hxl)
   } yield res
 
   ga.value
@@ -402,7 +397,7 @@ def insertUsers(
 The code is now a lot shorter and we can use closures (flatMap) to express our program.
 We solved issue 1 and 5 with `Hxl`.
 
-### Erasing `EitherT`
+## Erasing `EitherT`
 A lot of the code's remaining complexity is due to our use of `EitherT`.
 Pulling in a tool to algebraically solve a problem will yet again be our salvation.
 
@@ -460,9 +455,8 @@ def insertUsers(
   repo: Repo,
   c: Catch[IO]
 ): IO[Either[Errors, NonEmptyList[UUID]]] = c.use[Errors] { h =>
-  import hxl.instances.parallel._
-  implicit val parallelIO: Parallel[IO] = h.accumulatingParallelForParallel(IO.parallelForIO, Semigroup[Errors])
-  
+  implicit val parallel: Parallel[HxlM[IO, *]] = 
+    hxl.instances.hxlm.parallel.parallelHxlMForParallelEffect(h.accumulatingParallelForParallel)
   def run(input: InputUser, getToken: IO[String]): HxlM[IO, UUID] = 
     for {
       phone <- HxlM.liftF {
@@ -480,7 +474,7 @@ def insertUsers(
       repo.getOrganization(organizationId)
     }
     getToken <- repo.getOrganizationAccessToken(organizationId).memoize
-    res <- Hxl.runSequential(inputs.parTraverse(iu => run(iu, getToken).hxl))
+    res <- Hxl.runSequential(inputs.parTraverse(iu => run(iu, getToken)).hxl)
   } yield res
 }
 ```
@@ -489,7 +483,7 @@ And that's it.
 We went though a lot of stuff, but we ended up with a much shorter solution.
 The data sources we created can also be reused in other parts of our application.
 
-#### Conclusion
+## Conclusion
 The line-of-code reduction between the first semantically correct solution and the final one was not negligible, but we had to add extra abstractions to get there.
 
 The final solution requires more knowledge of the generic abstractions, and reduces the required problem-specific knowledge for readers of the code.
@@ -506,5 +500,29 @@ Regardless, `Hxl` almost cuts the problem size in half and is generally applicab
 `catch-effect` introduces algebras (MTL) that are well established in functional programming.
 `catch-effect` is a pragmatic solution born from modern effect research of algebraic effects and capabilities.
 However, `catch-effect` is the only abstraction that we have explored which cannot be graced with a sound api (capture checking).
+
+Unfortunately, ambiguity is involved in picking the right `Parallel` instance, be it `EitherT` or `IO` with `catch-effect`.
+I suppose the nature of `Parallel` is reasoning with ambiguity, being that `Parallel` instances for monad transformers are sometimes defined by another `Parallel` instance.
+Consider this table for ambigious semantics for `IO` (or `EitherT` for that matter):
+
+| IO  | IO with error E1 |
+|-----|------------------|
+| Par | Par              |
+| Par | Seq              |
+| Seq | Par              |
+
+There is no unique `Parallel` definition for `IO` anymore.
+Now what happens if we introduce another error?
+
+| IO  | IO with error E1 | IO with error E2 |
+|-----|------------------|------------------|
+| Par | Par              | Seq              |
+| Par | Seq              | Seq              |
+| Seq | Par              | Seq              |
+| Par | Par              | Par              |
+| Par | Seq              | Par              |
+| Seq | Par              | Par              |
+
+In fact, the choices grow by $2^n$ where $n$ is the number of error channels.
 
 Thank you for reading, I hope that at least some of the ideas and abstractions presented in this post were of interest.

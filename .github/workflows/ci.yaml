@@ -15,7 +15,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix flake check
-      - run: nix develop --command "cd scala && sbt blog/mdoc"
+      - run: nix develop --command bash -c "cd scala && sbt blog/mdoc"
 
       - env:
           GIT_USER: valdemargr

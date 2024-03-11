@@ -18,6 +18,8 @@ jobs:
       - run: nix develop --command bash -c "cd scala && sbt blog/mdoc"
 
       - name: Deploy
+        env:
+          USE_SSH: true
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"

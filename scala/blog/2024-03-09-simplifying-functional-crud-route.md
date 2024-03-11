@@ -282,7 +282,7 @@ def insertUsers(
 ```
 This solves issue 2.
 There is a lot of considerations behind our parallel instance.
-A `Parallel` inastance for `EitherT` is not a free lunch, it comes with ambiguity.
+A `Parallel` instance for `EitherT` is not a free lunch, it comes with ambiguity.
 Multiple valid `Parallel` instances for `EitherT` exist, but that is another topic.
 
 With this addition we have solved all issues regarding semantics.

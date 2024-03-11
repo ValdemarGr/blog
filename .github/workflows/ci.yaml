@@ -16,11 +16,11 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix flake check
       - run: nix develop --command bash -c "cd scala && sbt blog/mdoc"
+      - run: nix develop --command bash -c "cd site && yarn install && yarn build"
 
-      - name: Deploy
-        env:
-          GIT_USER: "github-actions[bot]"
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          cd site && yarn install && yarn deploy
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Build output to publish to the `gh-pages` branch:
+          publish_dir: ./site/build

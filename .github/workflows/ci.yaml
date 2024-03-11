@@ -2,27 +2,20 @@ name: CI
 
 on:
   push:
-    branches: ['**', '!update/**', '!pr/**']
-
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-concurrency:
-  group: ${{ github.workflow }} @ ${{ github.ref }}
-  cancel-in-progress: true
+    branches:
+      - main
 
 jobs:
   build:
-    name: Build the docs using nix
+    name: Run the release
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v20
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix flake check
-      - run: cd scala && sbt docs
+      - run: nix develop --command "cd scala && sbt blog/mdoc"
 
       - env:
           GIT_USER: valdemargr
